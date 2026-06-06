@@ -94,8 +94,11 @@ export function createRelease(dir, version, name, notes, dryRun = false, options
   // Create tag
   createTag(tag, cwd, { noPush: options.noPush });
 
-  // Create GitHub release
-  createGhRelease(tag, title, notes, cwd, { noPush: options.noPush });
+  // Create GitHub release (skip when tag is not pushed — remote has no ref to point at)
+  if (options.noPush) {
+    return { tagged: true, released: false, skipped: false, reason: "no-push: skipped gh release" };
+  }
+  createGhRelease(tag, title, notes, cwd);
 
   return { tagged: true, released: true, skipped: false };
 }
