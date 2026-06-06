@@ -1,0 +1,13 @@
+{
+  "name": "release-yoshi",
+  "version": "0.1.0",
+  "description": "Automatic git tag and GitHub release creation tool. Zero dependencies.",
+  "type": "module",
+  "bin": {
+    "release-yoshi": "./bin/release-yoshi.mjs"
+  },
+  "scripts": {
+    "test": "node --test tests/"
+  },
+  "license": "MIT"
+}
