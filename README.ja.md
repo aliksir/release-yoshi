@@ -36,6 +36,9 @@ release-yoshi
 | `--dir <path>` | 対象リポジトリのディレクトリ（デフォルト: カレントディレクトリ） |
 | `--dry-run` | 実行せず、何が行われるかを表示 |
 | `--no-push` | タグをローカルに作成し、origin への push をスキップ |
+| `--strict` | CHANGELOG.md に該当バージョンのセクション必須（`--generate-notes` フォールバック停止） |
+| `--sign` | 署名付きタグを作成（`git tag -s`、GPG/SSH キー設定が必要） |
+| `--check-ci` | push 前に CI ステータスを確認 |
 | `-h, --help` | ヘルプメッセージを表示 |
 
 ### 使用例

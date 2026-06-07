@@ -36,6 +36,9 @@ If no version change is detected, the tool exits silently with code 0.
 | `--dir <path>` | Target repository directory (default: current directory) |
 | `--dry-run` | Show what would be done without executing |
 | `--no-push` | Create the tag locally but do not push to origin |
+| `--strict` | Require a CHANGELOG.md section for this version (no `--generate-notes` fallback) |
+| `--sign` | Create a signed tag (`git tag -s`, requires GPG/SSH key configured) |
+| `--check-ci` | Check CI status before pushing (uses `gh pr checks` or commit status API) |
 | `-h, --help` | Show help message |
 
 ### Examples

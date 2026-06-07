@@ -29,10 +29,11 @@ function tagExists(tag, cwd) {
  * Create a git tag and push it to origin.
  * @param {string} tag - Tag name
  * @param {string} cwd - Repository directory
- * @param {{ noPush?: boolean }} options
+ * @param {{ noPush?: boolean, sign?: boolean }} options
  */
-function createTag(tag, cwd, { noPush = false } = {}) {
-  execFileSync("git", ["tag", tag], { cwd, stdio: "pipe" });
+function createTag(tag, cwd, { noPush = false, sign = false } = {}) {
+  const tagArgs = sign ? ["tag", "-s", tag, "-m", tag] : ["tag", tag];
+  execFileSync("git", tagArgs, { cwd, stdio: "pipe" });
   if (!noPush) {
     execFileSync("git", ["push", "origin", tag], { cwd, stdio: "pipe" });
   }
@@ -65,7 +66,7 @@ function createGhRelease(tag, title, notes, cwd, { noPush = false } = {}) {
  * @param {string} name - Package name for the release title
  * @param {string|null} notes - Release notes, or null for auto-generation
  * @param {boolean} [dryRun=false] - If true, only report what would be done
- * @param {{ noPush?: boolean }} [options={}]
+ * @param {{ noPush?: boolean, sign?: boolean }} [options={}]
  * @returns {{ tagged: boolean, released: boolean, skipped: boolean, reason?: string }}
  */
 export function createRelease(dir, version, name, notes, dryRun = false, options = {}) {
@@ -82,7 +83,7 @@ export function createRelease(dir, version, name, notes, dryRun = false, options
     const notesSummary = notes
       ? `CHANGELOG notes (${notes.length} chars)`
       : "--generate-notes";
-    console.log(`[dry-run] Would create tag: ${tag}`);
+    console.log(`[dry-run] Would create tag: ${tag}${options.sign ? ' (signed)' : ''}`);
     console.log(`[dry-run] Would create release: ${title}`);
     console.log(`[dry-run] Notes source: ${notesSummary}`);
     if (options.noPush) {
@@ -92,7 +93,7 @@ export function createRelease(dir, version, name, notes, dryRun = false, options
   }
 
   // Create tag
-  createTag(tag, cwd, { noPush: options.noPush });
+  createTag(tag, cwd, { noPush: options.noPush, sign: options.sign });
 
   // Create GitHub release (skip when tag is not pushed — remote has no ref to point at)
   if (options.noPush) {
