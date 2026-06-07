@@ -15,6 +15,7 @@
 import { detectVersionChange } from "../src/detector.mjs";
 import { extractChangelog } from "../src/changelog.mjs";
 import { createRelease } from "../src/releaser.mjs";
+import { appendLog } from "../src/log.mjs";
 
 function parseArgs(argv) {
   const args = { dir: null, dryRun: false, noPush: false };
@@ -47,6 +48,18 @@ Options:
 
   return args;
 }
+
+const _start = Date.now();
+process.on('exit', (code) => {
+  appendLog({
+    tool: 'release-yoshi',
+    command: 'release',
+    ts: new Date().toISOString(),
+    duration_ms: Date.now() - _start,
+    exit_code: code,
+    meta: {},
+  });
+});
 
 function main() {
   const args = parseArgs(process.argv);
