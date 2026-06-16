@@ -55,9 +55,11 @@ export function parseVersionFromDiff(diffText) {
 /**
  * Detect whether the latest commit changed package.json version.
  * @param {string} [dir=process.cwd()] - Repository directory
+ * @param {Function|null} [execFn=null] - Injectable exec for testing; defaults to execFileSync
  * @returns {{ changed: boolean, oldVersion: string|null, newVersion: string|null, packageName: string|null }}
  */
-export function detectVersionChange(dir) {
+export function detectVersionChange(dir, execFn = null) {
+  const exec = execFn ?? execFileSync;
   const cwd = dir ? resolve(dir) : process.cwd();
 
   // Read current package.json for the package name
@@ -72,7 +74,7 @@ export function detectVersionChange(dir) {
   // Get diff of package.json between HEAD~1 and HEAD
   let diffText;
   try {
-    diffText = execFileSync(
+    diffText = exec(
       "git",
       ["diff", "HEAD~1", "HEAD", "--", "package.json"],
       { cwd, encoding: "utf8", stdio: ["pipe", "pipe", "pipe"] }

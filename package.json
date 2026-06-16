@@ -6,6 +6,11 @@
   "bin": {
     "release-yoshi": "./bin/release-yoshi.mjs"
   },
+  "exports": {
+    "./detector": "./src/detector.mjs",
+    "./changelog": "./src/changelog.mjs",
+    "./releaser": "./src/releaser.mjs"
+  },
   "scripts": {
     "test": "node --test tests/"
   },

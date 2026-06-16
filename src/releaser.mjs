@@ -8,13 +8,14 @@ import { resolve } from "node:path";
 
 /**
  * Check if a git tag already exists.
- * @param {string} tag - Tag name (e.g., "v1.2.0")
- * @param {string} cwd - Repository directory
+ * @param {string} tag
+ * @param {string} cwd
+ * @param {Function} exec
  * @returns {boolean}
  */
-function tagExists(tag, cwd) {
+function tagExists(tag, cwd, exec) {
   try {
-    execFileSync("git", ["rev-parse", tag], {
+    exec("git", ["rev-parse", tag], {
       cwd,
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"],
@@ -27,27 +28,29 @@ function tagExists(tag, cwd) {
 
 /**
  * Create a git tag and push it to origin.
- * @param {string} tag - Tag name
- * @param {string} cwd - Repository directory
+ * @param {string} tag
+ * @param {string} cwd
  * @param {{ noPush?: boolean, sign?: boolean }} options
+ * @param {Function} exec
  */
-function createTag(tag, cwd, { noPush = false, sign = false } = {}) {
+function createTag(tag, cwd, { noPush = false, sign = false } = {}, exec) {
   const tagArgs = sign ? ["tag", "-s", tag, "-m", tag] : ["tag", tag];
-  execFileSync("git", tagArgs, { cwd, stdio: "pipe" });
+  exec("git", tagArgs, { cwd, stdio: "pipe" });
   if (!noPush) {
-    execFileSync("git", ["push", "origin", tag], { cwd, stdio: "pipe" });
+    exec("git", ["push", "origin", tag], { cwd, stdio: "pipe" });
   }
 }
 
 /**
  * Create a GitHub release using gh CLI.
- * @param {string} tag - Tag name
- * @param {string} title - Release title
- * @param {string|null} notes - Release notes body. If null, uses --generate-notes.
- * @param {string} cwd - Repository directory
+ * @param {string} tag
+ * @param {string} title
+ * @param {string|null} notes
+ * @param {string} cwd
  * @param {{ noPush?: boolean }} options
+ * @param {Function} exec
  */
-function createGhRelease(tag, title, notes, cwd, { noPush = false } = {}) {
+function createGhRelease(tag, title, notes, cwd, { noPush = false } = {}, exec) {
   const args = ["release", "create", tag, "--title", title];
 
   if (notes) {
@@ -56,7 +59,7 @@ function createGhRelease(tag, title, notes, cwd, { noPush = false } = {}) {
     args.push("--generate-notes");
   }
 
-  execFileSync("gh", args, { cwd, stdio: "pipe" });
+  exec("gh", args, { cwd, stdio: "pipe" });
 }
 
 /**
@@ -67,15 +70,17 @@ function createGhRelease(tag, title, notes, cwd, { noPush = false } = {}) {
  * @param {string|null} notes - Release notes, or null for auto-generation
  * @param {boolean} [dryRun=false] - If true, only report what would be done
  * @param {{ noPush?: boolean, sign?: boolean }} [options={}]
+ * @param {Function|null} [execFn=null] - Injectable exec for testing; defaults to execFileSync
  * @returns {{ tagged: boolean, released: boolean, skipped: boolean, reason?: string }}
  */
-export function createRelease(dir, version, name, notes, dryRun = false, options = {}) {
+export function createRelease(dir, version, name, notes, dryRun = false, options = {}, execFn = null) {
+  const exec = execFn ?? execFileSync;
   const cwd = dir ? resolve(dir) : process.cwd();
   const tag = `v${version}`;
   const title = `${name} v${version}`;
 
   // Check if tag already exists
-  if (tagExists(tag, cwd)) {
+  if (tagExists(tag, cwd, exec)) {
     return { tagged: false, released: false, skipped: true, reason: `Tag ${tag} already exists` };
   }
 
@@ -93,13 +98,13 @@ export function createRelease(dir, version, name, notes, dryRun = false, options
   }
 
   // Create tag
-  createTag(tag, cwd, { noPush: options.noPush, sign: options.sign });
+  createTag(tag, cwd, { noPush: options.noPush, sign: options.sign }, exec);
 
   // Create GitHub release (skip when tag is not pushed — remote has no ref to point at)
   if (options.noPush) {
     return { tagged: true, released: false, skipped: false, reason: "no-push: skipped gh release" };
   }
-  createGhRelease(tag, title, notes, cwd);
+  createGhRelease(tag, title, notes, cwd, {}, exec);
 
   return { tagged: true, released: true, skipped: false };
 }
